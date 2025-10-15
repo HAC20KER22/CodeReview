@@ -9,7 +9,7 @@ You need a Gemini Key.
 3. Create a new key.
 4. Add it in the folder
 ```
-cd backend
+cd codereview
 touch keys.env
 ```
 5. In the keys.env
@@ -24,9 +24,10 @@ cd frontend
 npm run dev
 ```
 
-backend is a folder build of Django. 
+codereview is a folder build of Django. 
 To run 
 ```
 cd backend
 python manage.py runserver
 ```
+
