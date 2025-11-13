@@ -2,11 +2,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.files.storage import default_storage
-
 import google.generativeai as genai
-import os
-import re
-import json
+import os,re,json
+from .models import CodeReview
+from .serializers import CodeReviewSerializer
+import hashlib
 
 
 class CodeUploadView(APIView):
@@ -27,6 +27,17 @@ class CodeReviewView(APIView):
             
             #Read File Count
             code = file.read().decode('UTF-8')
+
+
+            #hashing of file
+            curr_file_hash = hashlib.sha256(code.encode()).hexdigest()
+
+            #Check if it already exists
+            existing_review = CodeReview.objects.filter(file_hash=curr_file_hash).firs()
+            if existing_review:
+                serializer = CodeReviewSerializer(existing_review)
+                return Response(serializer.data['review_data'], status=status.HTTP_200_OK)
+                                                        
 
             #Configure Gemini
             api_key = os.getenv("GEMINI_API_KEY")
@@ -73,6 +84,15 @@ class CodeReviewView(APIView):
                 #Fallback If its still not a valid JSON
                 json_data = {'raw_output':text}
 
+
+            review_record = CodeReview.objects.create(
+                file_name=file.name,
+                file_path='Uploaded via review endpoint',
+                file_hash=curr_file_hash,
+                review_data=json_data
+            )
+
+            serializer = CodeReviewSerializer(review_record)
 
             #Return structured Review
             return Response(json_data, status=status.HTTP_200_OK)
